@@ -1,0 +1,27 @@
+name: Thumbnail connectivity probe
+on:
+  push:
+    paths:
+      - '.github/workflows/thumbnail-probe.yml'
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check category images without downloading videos
+        run: |
+          python - <<'PY'
+          import urllib.request,re
+          u='https://www.lobstertube.com/category/german-homemade?page=5'
+          try:
+              r=urllib.request.urlopen(urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'}),timeout=20)
+              s=r.read().decode('utf-8','replace')
+              print('HTTP:',r.status,'bytes:',len(s))
+              for pattern in [r'<img[^>]+>',r'poster=',r'data-src=',r'og:image']:
+                  print(pattern,'count',len(re.findall(pattern,s,re.I)))
+              print('First images:',re.findall(r'<img[^>]+>',s,re.I)[:4])
+          except Exception as e:
+              print('FETCH FAILED',type(e).__name__,str(e));raise
+          PY
